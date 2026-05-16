@@ -10,24 +10,23 @@ class Vector:
     def ingest(self, source, message):
         self.events.append({"source": source, "message": message})
 
-    def run(self):
+    def decide(self):
         stats = {}
 
         for e in self.events:
             stats[e["source"]] = stats.get(e["source"], 0) + 1
 
-        if stats:
-            strongest = max(stats, key=stats.get)
-            weakest = min(stats, key=stats.get)
-        else:
-            strongest = None
-            weakest = None
+        if not stats:
+            return {"status": "NO DATA"}
+
+        strongest = max(stats, key=stats.get)
+        weakest = min(stats, key=stats.get)
 
         return {
-            "status": "VECTOR ONLINE",
-            "activity": stats,
+            "status": "VECTOR ACTIVE",
             "strongest": strongest,
-            "weakest": weakest
+            "weakest": weakest,
+            "activity": stats
         }
 
 vector = Vector()
@@ -43,8 +42,8 @@ def home():
 @app.post("/event")
 def event(e: Event):
     vector.ingest(e.source, e.message)
-    return {"status": "event received"}
+    return {"status": "received"}
 
-@app.get("/insights")
-def insights():
-    return vector.run()
+@app.get("/decide")
+def decide():
+    return vector.decide()
