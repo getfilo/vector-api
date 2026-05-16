@@ -1,10 +1,12 @@
 from fastapi import FastAPI
 from pydantic import BaseModel
+import threading
+import time
 
 app = FastAPI()
 
 # =========================
-# 🧠 VECTOR CORE ENGINE
+# 🧠 VECTOR CORE
 # =========================
 
 class Vector:
@@ -12,7 +14,7 @@ class Vector:
         self.events = []
 
     # -------------------------
-    # EVENT INGESTION
+    # INGEST DATA
     # -------------------------
     def ingest(self, source, message, priority=1):
         self.events.append({
@@ -22,7 +24,7 @@ class Vector:
         })
 
     # -------------------------
-    # ANALYSIS ENGINE
+    # ANALYZE SYSTEM
     # -------------------------
     def analyze(self):
         score = {}
@@ -53,19 +55,17 @@ class Vector:
         if score[weakest] < 5:
             actions.append({
                 "type": "BOOST",
-                "target": weakest,
-                "reason": "Low activity detected"
+                "target": weakest
             })
 
         if score[strongest] > 10:
             actions.append({
                 "type": "MAINTAIN",
-                "target": strongest,
-                "reason": "High performance detected"
+                "target": strongest
             })
 
         return {
-            "status": "VECTOR PHASE 2 ACTIVE",
+            "status": "VECTOR ACTIVE",
             "scores": score,
             "strongest": strongest,
             "weakest": weakest,
@@ -83,12 +83,7 @@ class Vector:
         })
 
 
-# =========================
-# 🧠 VECTOR INSTANCE
-# =========================
-
 vector = Vector()
-
 
 # =========================
 # 📦 REQUEST MODELS
@@ -104,6 +99,35 @@ class Feedback(BaseModel):
     source: str
     status: str
 
+# =========================
+# 🌐 AUTONOMOUS THINKING
+# =========================
+
+def autonomous_loop():
+    while True:
+        time.sleep(10)
+
+        score = vector.analyze()
+
+        if not score:
+            continue
+
+        strongest = max(score, key=score.get)
+        weakest = min(score, key=score.get)
+
+        print("\n🧠 VECTOR AUTONOMOUS CYCLE")
+        print("Scores:", score)
+        print("Strongest:", strongest)
+        print("Weakest:", weakest)
+
+        if score[weakest] < 5:
+            print("⚠️ Suggestion: BOOST", weakest)
+
+        if score[strongest] > 10:
+            print("🔥 Suggestion: MAINTAIN", strongest)
+
+# start background brain
+threading.Thread(target=autonomous_loop, daemon=True).start()
 
 # =========================
 # 🌐 API ENDPOINTS
@@ -113,16 +137,14 @@ class Feedback(BaseModel):
 def home():
     return {
         "message": "VECTOR API LIVE",
-        "status": "PHASE 2 ACTIVE"
+        "mode": "PHASE 3 AUTONOMOUS ACTIVE"
     }
 
 
 @app.post("/event")
 def event(e: Event):
     vector.ingest(e.source, e.message, e.priority)
-    return {
-        "status": "event received by VECTOR"
-    }
+    return {"status": "event received"}
 
 
 @app.get("/decide")
@@ -133,6 +155,4 @@ def decide():
 @app.post("/feedback")
 def feedback(f: Feedback):
     vector.feedback(f.source, f.status)
-    return {
-        "status": "feedback recorded"
-    }
+    return {"status": "feedback recorded"}
